@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interactive SVG Drawing Tool</title>
+
+    <!-- JetBrains Mono -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #0d1117; /* new darker bg */
+        color: #ff9800; /* new text color */
+        font-family: "JetBrains Mono", monospace;
+        font-size: 18px; /* increased text size */
+      }
+
+      .wrap {
+        width: min(92vw, 920px);
+        border: 2px solid #3a3a3a;
+        border-radius: 12px;
+        padding: 16px;
+        background-color: #161b22; /* new panel bg */
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+      }
+
+      h2 {
+        margin: 0 0 12px 0;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        font-size: 24px; /* bigger heading */
+      }
+
+      .stage {
+        width: 100%;
+        height: 520px;
+        background: linear-gradient(180deg, #1c1c1c, #101418);
+        border: 2px solid #3a3a3a;
+        border-radius: 8px;
+        cursor: crosshair;
+        display: block;
+      }
+
+      .hint {
+        margin-top: 12px;
+        opacity: 0.8;
+        font-size: 1rem; /* slightly bigger hint */
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h2>SVG Drawing Tool</h2>
+      <svg
+        id="stage"
+        class="stage"
+        viewBox="0 0 1000 600"
+        preserveAspectRatio="none"
+      ></svg>
+      <div class="hint">Click–drag to draw. Release to finish a stroke.</div>
+    </div>
+
+    <script>
+      const svg = document.getElementById("stage");
+
+      let isDrawing = false;
+      let currentPath = null;
+
+      function svgPoint(evt) {
+        const pt = svg.createSVGPoint();
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        const screenCTM = svg.getScreenCTM();
+        return pt.matrixTransform(screenCTM.inverse());
+      }
+
+      function startDraw(e) {
+        isDrawing = true;
+        const p = svgPoint(e);
+
+        currentPath = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path"
+        );
+        currentPath.setAttribute("d", `M ${p.x} ${p.y}`);
+        currentPath.setAttribute("stroke", "#ff9800"); // changed stroke color
+        currentPath.setAttribute("stroke-width", "3.2");
+        currentPath.setAttribute("fill", "none");
+        currentPath.setAttribute("stroke-linecap", "round");
+        currentPath.setAttribute("stroke-linejoin", "round");
+
+        svg.appendChild(currentPath);
+
+        e.preventDefault();
+      }
+
+      function draw(e) {
+        if (!isDrawing || !currentPath) return;
+        const p = svgPoint(e);
+        currentPath.setAttribute(
+          "d",
+          currentPath.getAttribute("d") + ` L ${p.x} ${p.y}`
+        );
+      }
+
+      function endDraw() {
+        isDrawing = false;
+        currentPath = null;
+      }
+
+      svg.addEventListener("mousedown", startDraw);
+      svg.addEventListener("mousemove", draw);
+      svg.addEventListener("mouseup", endDraw);
+      svg.addEventListener("mouseleave", endDraw);
+    </script>
+  </body>
+</html>
